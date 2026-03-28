@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factor-Neutral Pairs Trading — Manu Mythil Muralee</title>
+    <meta name="description" content="Technical deep dive into an automated Pairs Trading Pipeline built for quantitative finance, leveraging DBSCAN and Engle-Granger Cointegration.">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>M</text></svg>">
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header" role="banner">
+        <div class="container header__inner">
+            <a href="index.html" class="header__logo">Manu Mythil Muralee</a>
+            <nav role="navigation">
+                <ul class="nav__list">
+                    <li><a href="about.html" class="nav__link">About</a></li>
+                    <li><a href="projects.html" class="nav__link">Projects</a></li>
+                    <li><a href="contact.html" class="nav__link">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="main-content">
+        <!-- Page Hero -->
+        <section class="page-hero">
+            <div class="container">
+                <p class="t-label page-hero__label reveal">Technical Deep Dive</p>
+                <h1 class="t-h1 page-hero__title reveal" style="max-width: 900px;">Factor-Neutral Pairs Trading Pipeline</h1>
+                <p class="t-body-lg page-hero__text reveal" style="color: var(--mid);">
+                    A production-grade algorithmic pipeline uniting Unsupervised Machine Learning and Time-Series Econometrics.
+                </p>
+            </div>
+        </section>
+
+        <div class="divider" style="margin: 0;"></div>
+
+        <!-- content -->
+        <section class="section">
+            <div class="container">
+                <div class="about-content" style="max-width: 800px; margin: 0 auto;">
+
+                    <div class="reveal">
+                        <h2 class="t-h3" style="margin-bottom: 1rem;">SECTION 1 — PROJECT MOTIVATION</h2>
+                        <p class="t-body" style="margin-bottom: 1rem;">
+                            Pairs trading is an equity-neutral statistical arbitrage strategy. By identifying two highly correlated assets, going long on the underperformer and short on the overperformer, one can theoretically extract profit regardless of broader market direction (beta-neutrality). However, naive pairs trading—relying merely on price correlation—carries a catastrophic flaw: the risk of permanent structural divergence. If two companies drift apart because of fundamental underlying shifts (e.g., changes in debt ratios, shifts in core business models), they will never revert to a historical mean, and the trade will bleed capital.
+                        </p>
+                        <p class="t-body">
+                            Combining fundamental machine learning screening with econometric cointegration testing solves this mathematically. Before looking at prices, we use unsupervised clustering to prove two companies are "fundamental twins." Only then do we conduct rigorous time-series tests to algebraically prove mean-reverting behavior.
+                        </p>
+                    </div>
+
+                    <div class="reveal" style="margin-top: 3rem;">
+                        <h2 class="t-h3" style="margin-bottom: 1rem;">SECTION 2 — PHASE 1: DATA ENGINEERING</h2>
+                        <p class="t-body" style="margin-bottom: 1rem;">
+                            The pipeline dynamically scrapes the S&P 500 constituency from live HTML sources. Utilizing the Python <code>requests</code> library, the pipeline simulates a standard web browser via a <code>User-Agent</code> header. A raw pandas <code>read_html()</code> Wikipedia scrape typically returns a 403 Forbidden error because modern cloud-delivery endpoints aggressively filter non-browser automated requests. Bypassing this filter ensures robust programmatic execution.
+                        </p>
+                        <p class="t-body">
+                            Financial ratios—Beta, Market Capitalization, Trailing P/E, and Debt/Equity—are asynchronously sourced via the <code>yfinance</code> API. Because financial reporting is notoriously noisy, missing data is unavoidable. The pipeline applies <code>SimpleImputer(strategy='median')</code>. Median imputation is vastly superior to mean imputation in financial datasets, as trailing outliers (such as a 10,000x P/E ratio due to virtually zero earnings) fatally distort the mean, whereas the median remains topologically resilient.
+                        </p>
+                    </div>
+
+                    <div class="reveal" style="margin-top: 3rem;">
+                        <h2 class="t-h3" style="margin-bottom: 1rem;">SECTION 3 — PHASE 2: UNSUPERVISED ML CLUSTERING</h2>
+                        <p class="t-body" style="margin-bottom: 1rem;">
+                            DBSCAN (Density-Based Spatial Clustering of Applications with Noise) was specifically selected over K-Means. K-Means forcibly assigns every single data point to a cluster. In the context of equity fundamentals, forcing outliers into pairs guarantees catastrophic correlation failure.
+                        </p>
+                        <p class="t-body">
+                            DBSCAN seamlessly identifies dense spatial structures and discards everything else as noise (assigned the label <code>-1</code>). By deploying hyperparameters <code>eps=1.5</code> and <code>min_samples=2</code>, the model geometrically strictly constrains the maximum distance (epsilon) between fundamental feature vectors required to form a cluster. Consequently, we ensure we are only matching companies that are virtually identical mathematically inside an n-dimensional fundamental space.
+                        </p>
+                    </div>
+
+                    <div class="reveal" style="margin-top: 3rem;">
+                        <h2 class="t-h3" style="margin-bottom: 1rem;">SECTION 4 — PHASE 3: ENGLE-GRANGER COINTEGRATION</h2>
+                        <p class="t-body" style="margin-bottom: 1rem;">
+                            In plain English, cointegration means that while two assets may wander randomly over time, the distance (spread) between them is tethered to a stable equilibrium; if they drift apart, they will predictably snap back together. Correlation simply measures vector alignment; correlation is not cointegration. Two strictly correlated assets might diverge indefinitely at an angle, failing to ever mean-revert.
+                        </p>
+                        <p class="t-body" style="margin-bottom: 1rem;">
+                            The pipeline employs the two-step <strong>Engle-Granger methodology</strong>:
+                            <br><br>
+                            <strong>Step 1: OLS Regression.</strong> An Ordinary Least Squares regression (<em>Y = βX + α</em>) models the price of stock Y against stock X. The beta coefficient (slope) represents the dynamic Hedge Ratio—exactly how many shares of X to short for every share of Y bought, neutralizing market exposure.
+                            <br><br>
+                            <strong>Step 2: Augmented Dickey-Fuller (ADF) Test.</strong> The residuals (the pricing error from the OLS regression) are extracted and subjected to the ADF test. Testing the residuals isolates the pure 'spread.' If this spread is proven to be stationary (no unit root), it mathematically proves mean-reversion. 
+                        </p>
+                        <p class="t-body">
+                            We established a strong p-value threshold of <strong>0.10</strong>. In this context, a 90% statistical confidence asserts that there is less than a 10% chance the observed mean-reversion of the spread is happening purely by random walk noise.
+                        </p>
+                    </div>
+
+                    <div class="reveal" style="margin-top: 3rem;">
+                        <h2 class="t-h3" style="margin-bottom: 1rem;">SECTION 5 — RESULTS</h2>
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem; margin-bottom: 1.5rem; text-align: left; background: rgba(255,255,255,0.05);">
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <th style="padding: 1rem;">Metric</th>
+                                <th style="padding: 1rem;">Value</th>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <td style="padding: 1rem;">Total S&P 500 Tickers Processed</td>
+                                <td style="padding: 1rem; font-weight: bold; color: var(--primary);">503</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <td style="padding: 1rem;">Total Fundamental Twin Pairs (DBSCAN)</td>
+                                <td style="padding: 1rem; font-weight: bold; color: var(--primary);">118,833</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <td style="padding: 1rem;">Total Cointegrated Pairs (p &lt; 0.10)</td>
+                                <td style="padding: 1rem; font-weight: bold; color: var(--primary);">28,429</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 1rem;">Top Pair Identified</td>
+                                <td style="padding: 1rem; font-weight: bold; color: var(--primary);">FISV / Q (p ≈ 0.000000, HR: -0.1648)</td>
+                            </tr>
+                        </table>
+                        <p class="t-body">
+                            <strong>Interpreting the Hedge Ratio:</strong> For the top pair (FISV / Q), the hedge ratio is approximately -0.16. In plain English, to maintain a mathematically neutral portfolio given their relative volatilities, for every 1 dollar long in FISV, the algorithm must short 16 cents worth of Q. The negative ratio specifically dictates the inverse positioning structure required for absolute neutrality.
+                        </p>
+                    </div>
+
+                    <div class="reveal" style="margin-top: 3rem;">
+                        <h2 class="t-h3" style="margin-bottom: 1rem;">SECTION 6 — RELEVANCE TO BBVA</h2>
+                        <p class="t-body" style="margin-bottom: 1rem;">
+                            The intersection of data science and scalable financial architectures is precisely what defines BBVA’s AI Factory and global quantitative research initiatives. BBVA extensively leverages rigorous econometric models combined with unsupervised screening algorithms to isolate anomalies, construct resilient credit models, and hunt for systematic trading alphas. The ability to bridge deep mathematical theory with an end-to-end Python microservice is fundamentally aligned with the bank's digital transformation mandate.
+                        </p>
+                        <p class="t-body">
+                            The core skills demonstrated in this pipeline—API-driven data engineering, unsupervised anomaly/cluster mapping (DBSCAN), and time-series cointegration econometrics (Engle-Granger)—map directly to the rigorous demands of a quantitative analyst or FinTech AI engineer role at BBVA. Strategy is only as valuable as its execution, and this architecture proves the capacity to design, build, and deploy automated deterministic logic applied to highly stochastic market environments.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__inner">
+                <div class="footer__logo">Manu Mythil Muralee</div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

@@ -327,6 +327,55 @@
                     </div>
                 </div>
             </div>
+        <!-- Framework 5: Factor-Neutral Mean Reversion -->
+        <div class="divider"></div>
+        <section class="section" aria-label="Factor-Neutral Mean Reversion">
+            <div class="container">
+                <div class="framework-detail reveal">
+                    <div class="framework-detail__header">
+                        <span class="framework-detail__number">05</span>
+                        <h2 class="t-h2">Factor-Neutral<br>Mean Reversion</h2>
+                    </div>
+                    <div class="framework-detail__content">
+                        <div class="framework-detail__desc">
+                            <p class="t-body-lg" style="margin-bottom: 1.5rem;">
+                                Naive correlation in markets is dangerous. Two seemingly correlated assets can diverge permanently due to structural changes. The true statistical edge lies in combining fundamental constraints with strict econometric cointegration. I built a production-grade <strong>Factor-Neutral Pairs Trading Pipeline</strong> using this logic to scan 118,833 pairs and mathematically isolate true mean-reverting behavior.
+                            </p>
+                        </div>
+                        <div class="framework-detail__steps">
+                            <h3 class="t-label" style="margin-bottom: 1.5rem;">Pipeline Mechanics</h3>
+                            <div class="framework-step">
+                                <span class="framework-step__num">01</span>
+                                <div>
+                                    <h4 class="framework-step__title">Fundamental Screening</h4>
+                                    <p class="framework-step__text">Use DBSCAN (Density-Based Spatial Clustering) to geographically cluster companies based on financial metrics, actively discarding outliers to find "fundamental twins."</p>
+                                </div>
+                            </div>
+                            <div class="framework-step">
+                                <span class="framework-step__num">02</span>
+                                <div>
+                                    <h4 class="framework-step__title">Hedge Ratio Calculation</h4>
+                                    <p class="framework-step__text">Run an Ordinary Least Squares (OLS) regression between the twin assets to determine the mathematically perfect offset (Hedge Ratio) required to neutralize broader market exposure.</p>
+                                </div>
+                            </div>
+                            <div class="framework-step">
+                                <span class="framework-step__num">03</span>
+                                <div>
+                                    <h4 class="framework-step__title">Cointegration Proof</h4>
+                                    <p class="framework-step__text">Apply the Augmented Dickey-Fuller (ADF) test on the regression residuals. If the spread is stationary, the pairs are cointegrated, proving mean-reversion.</p>
+                                </div>
+                            </div>
+                            <div class="framework-step">
+                                <span class="framework-step__num">04</span>
+                                <div>
+                                    <h4 class="framework-step__title">Signal Generation</h4>
+                                    <p class="framework-step__text">Calculate dynamic Z-scores of the spread to generate robust entry and exit trading signals whenever the spread deviates abnormally from its historical mean.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- CTA Banner -->
